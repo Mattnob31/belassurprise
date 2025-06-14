@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Protocolo Matrix</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: #00ff00;
+      font-family: "Courier New", Courier, monospace;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    .start-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 15px 30px;
+      background-color: #003300;
+      border: 1px solid #00ff00;
+      color: #00ff00;
+      font-size: 1.2rem;
+      cursor: pointer;
+      font-family: "Courier New", Courier, monospace;
+      z-index: 2;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .start-button:hover {
+      background-color: #00ff00;
+      color: black;
+    }
+
+    .terminal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #00ff00;
+      font-size: 1.2rem;
+      z-index: 1;
+      display: none;
+    }
+
+    #decode {
+      margin-top: 20px;
+      color: #555;
+      cursor: pointer;
+      transition: color 0.3s;
+      display: none;
+    }
+
+    #decode:hover {
+      color: #fff;
+    }
+
+    .final {
+      display: none;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #00ff00;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 1.2rem;
+      z-index: 2;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <button id="startBtn" class="start-button">[ Clique aqui para iniciar ]</button>
+
+  <div class="terminal" id="terminal">
+    <div id="line1"></div>
+    <br>
+    <div id="line2"></div>
+    <div id="decode">&gt; decode</div>
+  </div>
+
+  <div class="final" id="final">
+    <div id="finalText"></div>
+  </div>
+
+  <audio id="ambientSound" src="/mnt/data/fundo matrix.mp3" loop controls style="display: none;"></audio>
+  <audio id="typingSound" src="/mnt/data/Som de Teclado - Efeitos Sonoros HD.mp3" preload="auto" controls style="display: none;"></audio>
+
+  <script>
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const binarioSecreto = [
+      "01010000", "01110010", "01101111", "01100011", "01110101", "01110010", "01100101",
+      "00100000", "01101111", "01101110", "01100100", "01100101", "00100000", "01101111",
+      "01110011", "00100000", "01100011", "01100001", "01101101", "01101001", "01101110",
+      "01101000", "01101111", "01110011", "00100000", "01110011", "01100101", "00100000",
+      "01100011", "01110010", "01110101", "01111010", "01100001", "01101101", "00101110",
+      "00100000", "01001111", "00100000", "01101101", "01101111", "01110100", "01101111",
+      "01110010", "00100000", "01100111", "01110101", "01100001", "01110010", "01100100",
+      "01100001", "00100000", "01101101", "01100001", "01101001", "01110011", "00100000",
+      "01100100", "01101111", "00100000", "01110001", "01110101", "01100101", "00100000",
+      "01101101", "01101111", "01110110", "01101001", "01101101", "01100101", "01101110",
+      "01110100", "01101111", "00101110"
+    ];
+
+    const letters = "01";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).fill(1);
+
+    function draw() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
+      ctx.font = fontSize + "px Courier New";
+
+      for (let i = 0; i < drops.length; i++) {
+        let char;
+        if (Math.random() > 0.995 && i % 5 === 0) {
+          const bin = binarioSecreto[Math.floor(Math.random() * binarioSecreto.length)];
+          char = bin[Math.floor(Math.random() * bin.length)];
+        } else {
+          char = letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        drops[i] += 0.5;
+      }
+    }
+
+    setInterval(draw, 33);
+
+    const ambientSound = document.getElementById("ambientSound");
+    const typingSound = document.getElementById("typingSound");
+
+    const line1 = "A conexão foi estabelecida. Iniciando protocolo de entrega...";
+    const line2 = "> A verdade está perto. Mas só os olhos atentos enxergam através do código.";
+
+    let idx1 = 0, idx2 = 0;
+    const speed = 40;
+
+    function startTypingSound() {
+      typingSound.loop = true;
+      typingSound.currentTime = 0;
+      typingSound.play();
+    }
+
+    function stopTypingSound() {
+      typingSound.pause();
+      typingSound.currentTime = 0;
+    }
+
+    function typeLine1() {
+      if (idx1 < line1.length) {
+        document.getElementById("line1").textContent += line1.charAt(idx1);
+        idx1++;
+        setTimeout(typeLine1, speed);
+      } else {
+        setTimeout(typeLine2, 500);
+      }
+    }
+
+    function typeLine2() {
+      if (idx2 < line2.length) {
+        document.getElementById("line2").textContent += line2.charAt(idx2);
+        idx2++;
+        setTimeout(typeLine2, speed);
+      } else {
+        stopTypingSound();
+        document.getElementById("decode").style.display = "block";
+      }
+    }
+
+    function typeFinalMessage(msg, containerId) {
+      const container = document.getElementById(containerId);
+      let i = 0;
+      startTypingSound();
+      function typeChar() {
+        if (i < msg.length) {
+          container.innerHTML += msg.charAt(i);
+          i++;
+          setTimeout(typeChar, speed);
+        } else {
+          stopTypingSound();
+          container.innerHTML += '<span class="cursor">|</span>';
+        }
+      }
+      typeChar();
+    }
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      document.getElementById("startBtn").style.display = "none";
+      document.getElementById("terminal").style.display = "block";
+      ambientSound.play();
+      startTypingSound();
+      setTimeout(typeLine1, 1000);
+    });
+
+    document.getElementById("decode").addEventListener("click", () => {
+      stopTypingSound();
+      document.getElementById("terminal").style.display = "none";
+      document.getElementById("matrix").style.display = "none";
+      document.getElementById("final").style.display = "block";
+      typeFinalMessage("Última chave: está onde a jornada começa e termina.\nVerifique o porta-malas.", "finalText");
+    });
+  </script>
+</body>
+</html>
